@@ -159,24 +159,33 @@ int main(int argc, const char* argv[]) {
 	if ((!myCmp(argv[1], "-i"))||(!myCmp(argv[1], "-info"))) info(), exit(0);
 	
 	if (!myCmp(argv[1], "-c") && argc == 4) {
-		FILE* fileOut = createFile(argv[3], "-w");
+		system("clear");
+		FILE* fileOut = createFile(argv[3], "w");
 		schedule temp;
 		for (int i = 0; i < myAtoi(argv[2]); i++) {
 			cout << "Enter num: "; chek_in(temp.num);
-			cout << "Enter name: "; cin.read(temp.name, 124);
-			cout << "Enter type: "; cin.read(temp.type, 16);
+			cout << "Enter name: "; cin>>temp.name;
+			cout << "Enter type: "; cin>>temp.type;
 			cout << "Enter cost of"; chek_in(temp.costOf);
 			cout << "Enter length line, km: "; chek_in(temp.lenLine);
-			fprintf(fileOut, "%i\t%s\t%s\t%i\t%i\n", temp.num, temp.name, temp.type, temp.costOf, temp.lenLine);
+			fprintf(fileOut, "%u\t%s\t%s\t%u\t%u\n", temp.num, temp.name, temp.type, temp.costOf, temp.lenLine);
 		}
 		fclose(fileOut);
 	}
 
 	if (!myCmp(argv[1], "-r") && argc == 4) {
-		FILE* fileIn = createFile(argv[3], "-r");
+		system("clear");
+		FILE* fileIn = createFile(argv[3], "r");
 		schedule tempIn;
-		while (fscanf(fileIn, "%i\t%s\t%s\t%i\t%i\n", &tempIn.num, tempIn.name, tempIn.type, &tempIn.costOf, &tempIn.lenLine)) {
-			fprintf(stdout, "%i\t%s\t%s\t%i\t%i\n", tempIn.num, tempIn.name, tempIn.type, tempIn.costOf, tempIn.lenLine);
+		int count = 0;
+		while (fscanf(fileIn, "%u\t%s\t%s\t%u\t%u\n", &tempIn.num, tempIn.name, tempIn.type, &tempIn.costOf, &tempIn.lenLine) != EOF) {
+			if(!(count == myAtoi(argv[2]))) {
+				fprintf(stdout, "%u\t%s\t%s\t%u\t%u\n", tempIn.num, tempIn.name, tempIn.type, tempIn.costOf, tempIn.lenLine);
+				count++;
+			}
+			else {
+				break;
+			}
 		}
 		cout << "File is empty" << endl;
 		fclose(fileIn);
