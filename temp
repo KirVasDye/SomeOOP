@@ -277,6 +277,7 @@ int main(int argc, const char* argv[]) {
 		int count = 0;
 		while ((!feof(fileIn)) && (count + 1 < myAtoi(argv[2]))) {
 			buf[count].read(fileIn);
+			fprintf(stdin, "%u\t%s\t%s\t%u\t%u\n", buf[count].getNum(), buf[count].getName(), buf[count].getType(), buf[count].getCostOf(), buf[count].getLen());
 			count++;
 		}
 		cout << "File is empty" << endl;
