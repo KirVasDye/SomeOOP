@@ -30,8 +30,6 @@
 #include <iostream>
 #include <cstdio>
 #include <cstring>
-#define ERROR cout<<"Please enter text file name.\n", exit(-1)
-#define HELP cout << "This program takes as input the name\n of an existing text file and displays its contents.\n", exit(-1)
 
 /*=============================================================================================*/
 // Подключение функций и классов стандартной библиотеки С++
@@ -54,9 +52,8 @@ FILE* createFile(const char* str) {
 /*=============================================================================================*/
 // Вывод 80 строк файла
 
-void printFile(FILE* fptr, int index) {
-	char str[1024];
-	for (int i = index * 79; (i < (index + 1) * 79) && fgets(str, 1024, fptr); i++)
+void printFile(FILE* fptr, int index, char* str) {
+	for (int i = index * 80; (i < (index + 1) * 80) && fgets(str, 1024, fptr); i++)
 		cout << str;
 	return;
 }
@@ -70,9 +67,8 @@ bool pressEnter(FILE* fptr) {
 	char str[1024];
 	if (fgets(str, 1024, fptr)) {
 		system("clear");
-		cout << str;
 		index++;
-		printFile(fptr, index);
+		printFile(fptr, index, str);
 	}
 	else
 		res = false;
@@ -88,10 +84,29 @@ const char Logo[] = "\n ********************************************************
 					"\n * Performed student 18-IVT-2 Vasilev Kirill               *"
 					"\n ***********************************************************\n\n";
 
+void error(void) {
+	cout << "Please enter text file name.\n"; 
+	return;
+}
+
+void help(void) {
+	cout << "This program takes as input the name\nof an existing text file and displays its contents.\n"; 
+	return;
+}
+
+void info(void) {
+	cout << Logo;
+	return;
+}
+
 int main(int argc, const char* argv[]) {
-	if (argc == 1) ERROR;
-	if (strcmp(argv[1], "-h")) HELP;
+
+	if (argc == 1) error(), exit(-1);
+	if (!strcmp(argv[1], "-h")) help(), exit(0);
+	if (!strcmp(argv[1], "-i")) info(), exit(0);
+
 	FILE* file = createFile(argv[1]);
+
 	while (pressEnter(file)) {
 		getchar();
 		continue;
