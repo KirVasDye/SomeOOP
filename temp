@@ -3,7 +3,7 @@
 /*       Цель:Согласно заданию составить алгоритм и написать программу на языке С++.           */
 /* Программа компилируется и запускается под управлением ОС Linux. Разработанная               */
 /* программа должна содержать встроенную справочную информации, описывающую правила            */
-/* использования, цель назначения и информацию о разработчике. Аргументы запуска программа     */ 
+/* использования, цель назначения и информацию о разработчике. Аргументы запуска программа     */
 /* должна обрабатывать согласно рекомендациям POSIX.                                           */
 /*                                                                                             */
 /*       Исходные данные:                                                                      */
@@ -55,7 +55,7 @@ FILE* createFile(const char* str, const char* format) {
 
 const char Logo[] = "\n ***********************************************************"
 					"\n * Nizhniy Novgorod Technical University                   *"
-					"\n * Study work number 2. Task number 4.                     *"
+					"\n * Study work number 3. Task number 4.                     *"
 					"\n * Performed student 18-IVT-2 Vasilev Kirill               *"
 					"\n ***********************************************************\n\n";
 
@@ -139,56 +139,150 @@ void chek_in(T& a) {
 	return;
 }
 
-struct schedule {
-	unsigned short int num;
-	char name[124];
-	char type[16];
-	unsigned short int costOf;
-	unsigned short int lenLine;
+class schedule {
+private:
+	unsigned int num;
+	char* name;
+	char* type;
+	unsigned int costOf;
+	unsigned int lenLine;
+public:
+	schedule(void) {
+		num = 0;
+		name = nullptr;
+		type = nullptr;
+		costOf = 0;
+		lenLine = 0;
+		return;
+	}
+	void setNum(unsigned int _num) {
+		num = _num;
+		return;
+	}
+	void setName(char* _name) {
+		if (this->name == nullptr) {
+			this->name = new char[myLen(_name) + 1];
+			for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
+			this->name[myLen(_name)] = '\0';
+		}
+		else {
+			delete[] this->name;
+			this->name = new char[myLen(_name) + 1];
+			for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
+			this->name[myLen(_name)] = '\0';
+		}
+		return;
+	}
+	void setType(char* _type) {
+		if (this->type == nullptr) {
+			this->type = new char[myLen(_type) + 1];
+			for (int i = 0; i < myLen(_type); i++) this->type[i] = _type[i];
+			this->type[myLen(_type)] = '\0';
+		}
+		else {
+			delete[] this->type;
+			this->type = new char[myLen(_type) + 1];
+			for (int i = 0; i < myLen(_type); i++) this->type[i] = _type[i];
+			this->type[myLen(_type)] = '\0';
+		}
+		return;
+	}
+	void setCostOf(unsigned int _costOf) {
+		this->costOf = _costOf;
+		return;
+	}
+	void setLen(unsigned int _len) {
+		this->lenLine = _len;
+		return;
+	}
+	unsigned int getNum(void) {
+		return this->num;
+	}
+	char* getName(void) {
+		return this->name;
+	}
+	char* getType(void) {
+		return this->type;
+	}
+	unsigned int getCostOf(void) {
+		return this->costOf;
+	}
+	unsigned int getLen(void) {
+		return this->lenLine;
+	}
+	~schedule(void) {
+		num = 0;
+		delete[] this->name;
+		name = nullptr;
+		delete[] this->type;
+		type = nullptr;
+		costOf = 0;
+		lenLine = 0;
+		return;
+	}
+	void read(FILE* fptr) {
+		fread(this, sizeof(schedule), 1, fptr);
+		return;
+	}
+	void write(FILE* fptr) {
+		fwrite(this, sizeof(schedule), 1, fptr);
+		return;
+	}
 };
 
 int main(int argc, const char* argv[]) {
 
 	system("clear");
 
+	unsigned int num;
+	char name[100];
+	char type[16];
+	unsigned int costOf;
+	unsigned int lenLine;
+
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
 	// Вывод справочной информации
-	if ((!myCmp(argv[1], "-h"))||(!myCmp(argv[1], "-help"))) help(), exit(0); 
+	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "-help"))) help(), exit(0);
 	// Вывод информации об авторе
-	if ((!myCmp(argv[1], "-i"))||(!myCmp(argv[1], "-info"))) info(), exit(0);
-	
+	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "-info"))) info(), exit(0);
+
 	if (!myCmp(argv[1], "-c") && argc == 4) {
 		system("clear");
-		FILE* fileOut = createFile(argv[3], "w");
-		schedule temp;
+		FILE* fileOut = createFile(argv[3], "wb");
+		schedule* buf = new schedule[myAtoi(argv[2])];
 		for (int i = 0; i < myAtoi(argv[2]); i++) {
-			cout << "Enter num: "; chek_in(temp.num);
-			cout << "Enter name: "; cin>>temp.name;
-			cout << "Enter type: "; cin>>temp.type;
-			cout << "Enter cost of"; chek_in(temp.costOf);
-			cout << "Enter length line, km: "; chek_in(temp.lenLine);
-			fprintf(fileOut, "%u\t%s\t%s\t%u\t%u\n", temp.num, temp.name, temp.type, temp.costOf, temp.lenLine);
+			cout << "Enter num: "; chek_in(num);
+			cout << "Enter name: "; cin >> name;
+			cout << "Enter type: "; cin >> type;
+			cout << "Enter cost of"; chek_in(costOf);
+			cout << "Enter length line, km: "; chek_in(lenLine);
+			buf[i].setNum(num);
+			buf[i].setName(name);
+			buf[i].setType(type);
+			buf[i].setCostOf(costOf);
+			buf[i].setLen(lenLine);
+			buf[i].write(fileOut);
+			system("clear");
 		}
 		fclose(fileOut);
+		delete[] buf;
+		buf = nullptr;
 	}
 
 	if (!myCmp(argv[1], "-r") && argc == 4) {
 		system("clear");
-		FILE* fileIn = createFile(argv[3], "r");
-		schedule tempIn;
+		FILE* fileIn = createFile(argv[3], "rb");
+		schedule* buf = new schedule[myAtoi(argv[2])];
 		int count = 0;
-		while (fscanf(fileIn, "%u\t%s\t%s\t%u\t%u\n", &tempIn.num, tempIn.name, tempIn.type, &tempIn.costOf, &tempIn.lenLine) != EOF) {
-			if(!(count == myAtoi(argv[2]))) {
-				fprintf(stdout, "%u\t%s\t%s\t%u\t%u\n", tempIn.num, tempIn.name, tempIn.type, tempIn.costOf, tempIn.lenLine);
-				count++;
-			}
-			else {
-				break;
-			}
+		while ((!feof(fileIn)) && (count + 1 < myAtoi(argv[2]))) {
+			buf[count].read(fileIn);
+			count++;
 		}
 		cout << "File is empty" << endl;
 		fclose(fileIn);
+		delete[] buf;
+		buf = nullptr;
 	}
 
 	return 0;
