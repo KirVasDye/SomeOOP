@@ -184,14 +184,6 @@ public:
 	unsigned int getLen(void) {
 		return this->lenLine;
 	}
-	~schedule(void) {
-		num = 0;
-		delete[] this->name;
-		delete[] this->type;
-		costOf = 0;
-		lenLine = 0;
-		return;
-	}
 	void read(ifstream& file) {
 		file.read((char*)&num, sizeof(int));
 		file.read(name, 124);
@@ -227,7 +219,7 @@ int main(int argc, const char* argv[]) {
 	// Вывод справочной информации
 	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "--help"))) help(), exit(0);
 	// Вывод информации об авторе
-	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "-info"))) info(), exit(0);
+	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "--info"))) info(), exit(0);
 
 	if (!myCmp(argv[1], "-c") && argc == 4) {
 		system("clear");
@@ -263,8 +255,9 @@ int main(int argc, const char* argv[]) {
 		int countStolb;
 		fileIn.read((char*)&countStolb, sizeof(int));
 		fileIn.read(&newLine, 1);
-		while (!fileIn.eof() || counter < myAtoi(argv[2])) {
+		while (!fileIn.eof() && counter < myAtoi(argv[2])) {
 			bufin[counter].read(fileIn);
+			if(fileIn.eof()) break;
 			cout << bufin[counter].getNum() 
 				<< "\t" 
 				<< bufin[counter].getName()
