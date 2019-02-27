@@ -15,7 +15,7 @@
 /*                                                                                             */
 /*       Вызываемые модули:                                                                    */
 /*        - iostream                                                                           */
-/*        - cstdio                                                                             */
+/*        - fstream                                                                            */
 /*---------------------------------------------------------------------------------------------*/
 /*       Дата: 2019 | 25 | 02                                                                  */
 /*       Автор: Васильев Кирилл Николаевич                                                     */
@@ -27,7 +27,7 @@
 // Директивы препроцессора
 
 #include <iostream>
-#include <cstdio>
+#include <fstream>
 
 /*=============================================================================================*/
 // Подключение функций и классов стандартной библиотеки С++
@@ -36,28 +36,20 @@ using std::cout;
 using std::endl;
 using std::cin;
 using std::cerr;
+using std::ifstream;
+using std::ofstream;
+using std::ios;
 
 /*=============================================================================================*/
-// Функция открытия файла с проверкой
 
-FILE* createFile(const char* str, const char* format) {
-	FILE* file = fopen(str, format);
-	if (file == nullptr) {
-		cout << "File " << str << " cannot be opened.\n";
-		exit(-1);
-	}
-	else
-		return file;
+void logo(void) {
+	cout << "\033[37;1m\033[40m" << "\n *********************************************************** ";
+	cout << "\033[37;1m\033[40m" << "\n * Nizhniy Novgorod Technical University                   * ";
+	cout << "\033[37;1m\033[40m" << "\n * Study work number 3. Task number 4.                     * ";
+	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Vasilev Kirill               * ";
+	cout << "\033[37;1m\033[40m" <<	"\n *********************************************************** \n\n";
+	return;
 }
-
-/*=============================================================================================*/
-// Глобальная константная символьная переменная Logo
-
-const char Logo[] = "\n ***********************************************************"
-					"\n * Nizhniy Novgorod Technical University                   *"
-					"\n * Study work number 3. Task number 4.                     *"
-					"\n * Performed student 18-IVT-2 Vasilev Kirill               *"
-					"\n ***********************************************************\n\n";
 
 /*=============================================================================================*/
 // Функции вывода сообщений
@@ -85,9 +77,11 @@ void help(void) {
 }
 
 void info(void) {
-	cout << Logo;
+	logo();
 	return;
 }
+
+char newLine('\n');
 
 /*=============================================================================================*/
 // Реализуем функцию похожую на "int strlen(const char* str) {...}"
@@ -141,16 +135,14 @@ void chek_in(T& a) {
 
 class schedule {
 private:
-	unsigned int num;
-	char* name;
-	char* type;
-	unsigned int costOf;
-	unsigned int lenLine;
+	int num;
+	char name[124];
+	char type[16];
+	int costOf;
+	int lenLine;
 public:
 	schedule(void) {
 		num = 0;
-		name = nullptr;
-		type = nullptr;
 		costOf = 0;
 		lenLine = 0;
 		return;
@@ -160,31 +152,13 @@ public:
 		return;
 	}
 	void setName(char* _name) {
-		if (this->name == nullptr) {
-			this->name = new char[myLen(_name) + 1];
-			for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
-			this->name[myLen(_name)] = '\0';
-		}
-		else {
-			delete[] this->name;
-			this->name = new char[myLen(_name) + 1];
-			for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
-			this->name[myLen(_name)] = '\0';
-		}
+		for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
+		this->name[myLen(_name)] = '\0';
 		return;
 	}
 	void setType(char* _type) {
-		if (this->type == nullptr) {
-			this->type = new char[myLen(_type) + 1];
-			for (int i = 0; i < myLen(_type); i++) this->type[i] = _type[i];
-			this->type[myLen(_type)] = '\0';
-		}
-		else {
-			delete[] this->type;
-			this->type = new char[myLen(_type) + 1];
-			for (int i = 0; i < myLen(_type); i++) this->type[i] = _type[i];
-			this->type[myLen(_type)] = '\0';
-		}
+		for (int i = 0; i < myLen(_type); i++) this->type[i] = _type[i];
+		this->type[myLen(_type)] = '\0';
 		return;
 	}
 	void setCostOf(unsigned int _costOf) {
@@ -213,19 +187,27 @@ public:
 	~schedule(void) {
 		num = 0;
 		delete[] this->name;
-		name = nullptr;
 		delete[] this->type;
-		type = nullptr;
 		costOf = 0;
 		lenLine = 0;
 		return;
 	}
-	void read(FILE* fptr) {
-		fread(this, sizeof(schedule), 1, fptr);
+	void read(ifstream& file) {
+		file.read((char*)&num, sizeof(int));
+		file.read(name, 124);
+		file.read(type, 16);
+		file.read((char*)&costOf, sizeof(int));
+		file.read((char*)&lenLine, sizeof(int));
+		file.read(&newLine, 1);
 		return;
 	}
-	void write(FILE* fptr) {
-		fwrite(this, sizeof(schedule), 1, fptr);
+	void write(ofstream& file) {
+		file.write((char*)&num, sizeof(int));
+		file.write(name, 124);
+		file.write(type, 16);
+		file.write((char*)&costOf, sizeof(int));
+		file.write((char*)&lenLine, sizeof(int));
+		file.write(&newLine, 1);
 		return;
 	}
 };
@@ -235,7 +217,7 @@ int main(int argc, const char* argv[]) {
 	system("clear");
 
 	unsigned int num;
-	char name[100];
+	char name[124];
 	char type[16];
 	unsigned int costOf;
 	unsigned int lenLine;
@@ -243,47 +225,63 @@ int main(int argc, const char* argv[]) {
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
 	// Вывод справочной информации
-	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "-help"))) help(), exit(0);
+	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "--help"))) help(), exit(0);
 	// Вывод информации об авторе
 	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "-info"))) info(), exit(0);
 
 	if (!myCmp(argv[1], "-c") && argc == 4) {
 		system("clear");
-		FILE* fileOut = createFile(argv[3], "wb");
-		schedule* buf = new schedule[myAtoi(argv[2])];
+		int count = myAtoi(argv[2]);
+		ofstream fileOut(argv[3], ios::binary);
+		schedule* bufout = new schedule[count];
+		fileOut.write((char*)&count, sizeof(int));
+		fileOut.write(&newLine, 1);
 		for (int i = 0; i < myAtoi(argv[2]); i++) {
 			cout << "Enter num: "; chek_in(num);
 			cout << "Enter name: "; cin >> name;
 			cout << "Enter type: "; cin >> type;
-			cout << "Enter cost of"; chek_in(costOf);
+			cout << "Enter cost of: "; chek_in(costOf);
 			cout << "Enter length line, km: "; chek_in(lenLine);
-			buf[i].setNum(num);
-			buf[i].setName(name);
-			buf[i].setType(type);
-			buf[i].setCostOf(costOf);
-			buf[i].setLen(lenLine);
-			buf[i].write(fileOut);
+			bufout[i].setNum(num);
+			bufout[i].setName(name);
+			bufout[i].setType(type);
+			bufout[i].setCostOf(costOf);
+			bufout[i].setLen(lenLine);
+			bufout[i].write(fileOut);
 			system("clear");
 		}
-		fclose(fileOut);
-		delete[] buf;
-		buf = nullptr;
+		fileOut.close();
+		delete[] bufout;
+		bufout = nullptr;
 	}
 
 	if (!myCmp(argv[1], "-r") && argc == 4) {
 		system("clear");
-		FILE* fileIn = createFile(argv[3], "rb");
-		schedule* buf = new schedule[myAtoi(argv[2])];
-		int count = 0;
-		while ((!feof(fileIn)) && (count + 1 < myAtoi(argv[2]))) {
-			buf[count].read(fileIn);
-			fprintf(stdin, "%u\t%s\t%s\t%u\t%u\n", buf[count].getNum(), buf[count].getName(), buf[count].getType(), buf[count].getCostOf(), buf[count].getLen());
-			count++;
+		ifstream fileIn(argv[3], ios::binary);
+		schedule* bufin = new schedule[myAtoi(argv[2])];
+		int counter = 0;
+		int countStolb;
+		fileIn.read((char*)&countStolb, sizeof(int));
+		fileIn.read(&newLine, 1);
+		while (!fileIn.eof() || counter < myAtoi(argv[2])) {
+			bufin[counter].read(fileIn);
+			cout << bufin[counter].getNum() 
+				<< "\t" 
+				<< bufin[counter].getName()
+				<< "\t" 
+				<< bufin[counter].getType() 
+				<< "\t"
+				<< bufin[counter].getCostOf()
+				<< "\t"
+				<< bufin[counter].getLen() 
+				<< "\t\n";
+			counter++;
 		}
 		cout << "File is empty" << endl;
-		fclose(fileIn);
-		delete[] buf;
-		buf = nullptr;
+		cout << "Number of records = " << countStolb << endl;
+		fileIn.close();
+		delete[] bufin;
+		bufin = nullptr;
 	}
 
 	return 0;
