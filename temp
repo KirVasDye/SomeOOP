@@ -1,5 +1,3 @@
-/***********************************************************************************************/
-/*       Функция: FilePrintLine(file):file                                                     */
 /*       Цель:Согласно заданию составить алгоритм и написать программу на языке С++.           */
 /* Программа компилируется и запускается под управлением ОС Linux. Разработанная               */
 /* программа должна содержать встроенную справочную информации, описывающую правила            */
@@ -47,7 +45,7 @@ void logo(void) {
 	cout << "\033[37;1m\033[40m" << "\n * Nizhniy Novgorod Technical University                   * ";
 	cout << "\033[37;1m\033[40m" << "\n * Study work number 3. Task number 4.                     * ";
 	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Vasilev Kirill               * ";
-	cout << "\033[37;1m\033[40m" <<	"\n *********************************************************** \n\n";
+	cout << "\033[37;1m\033[40m" << "\n *********************************************************** \n\n";
 	return;
 }
 
@@ -97,7 +95,11 @@ int myLen(const char* str) {
 
 int myCmp(const char* str1, const char* str2) {
 	int res = 0;
-	if (myLen(str1) != myLen(str2)) {
+	if (myLen(str1) > myLen(str2)) {
+		res = 2;
+		return res;
+	}
+	if (myLen(str1) < myLen(str2)) {
 		res = -1;
 		return res;
 	}
@@ -109,6 +111,8 @@ int myCmp(const char* str1, const char* str2) {
 	}
 	return res;
 }
+
+/*=============================================================================================*/
 
 int myAtoi(const char* str) {
 	int res = 0;
@@ -123,6 +127,8 @@ int myAtoi(const char* str) {
 	return (int)(res / 10);
 }
 
+/*=============================================================================================*/
+
 template <typename T>
 void chek_in(T& a) {
 	while (!(cin >> a)) {
@@ -133,11 +139,138 @@ void chek_in(T& a) {
 	return;
 }
 
+/*=============================================================================================*/
+
+class TCharArray {
+private:
+	char& at(int index) {
+		if (index >= 0 && index < this->size)
+			return this->buf[index];
+		else {
+			cout << "Appeal to a non-existent element" << endl;
+			exit(-1);
+		}
+	}
+
+protected:
+	char* buf;
+	int size;
+
+public:
+	TCharArray(void) {
+		buf = nullptr;
+		size = 0;
+		return;
+	}
+	~TCharArray(void) {
+		delete[] buf;
+		buf = nullptr;
+		size = 0;
+		return;
+	}
+	TCharArray(char* str) {
+		this->size = myLen(str);
+		this->buf = new char[this->size + 1];
+		for (int i = 0; i < this->size; i++)
+			this->buf[i] = str[i];
+		this->buf[this->size] = '\0';
+		return;
+	}
+	void setBuf(char* str) {
+		if (this->buf == nullptr) {
+			this->size = myLen(str);
+			this->buf = new char[this->size + 1];
+			for (int i = 0; i < this->size; i++)
+				this->buf[i] = str[i];
+			this->buf[this->size] = '\0';
+		}
+		else {
+			delete[] this->buf;
+			this->size = myLen(str);
+			this->buf = new char[this->size + 1];
+			for (int i = 0; i < this->size; i++)
+				this->buf[i] = str[i];
+			this->buf[this->size] = '\0';
+		}
+		return;
+	}
+	int length(void) {
+		return this->size;
+	}
+	char& operator[](int index) {
+		return this->at(index);
+	}
+};
+
+class String : public TCharArray {
+public:
+	String(void) : TCharArray() {};
+	String(char* str) : TCharArray(str) {};
+	~String(void) {
+		delete[] buf;
+		buf = nullptr;
+		size = 0;
+		return;
+	}
+	void setStr(String& str) {
+		if (this->buf == nullptr) {
+			this->size = str.size;
+			this->buf = new char[this->size + 1];
+			for (int i = 0; i < this->size; i++)
+				this->buf[i] = str[i];
+			this->buf[this->size] = '\0';
+		}
+		else {
+			delete[] this->buf;
+			this->size = str.size;
+			this->buf = new char[this->size + 1];
+			for (int i = 0; i < this->size; i++)
+				this->buf[i] = str[i];
+			this->buf[this->size] = '\0';
+		}
+		return;
+	}
+	char* getStr(void) {
+		return this->buf;
+	}
+	String operator+(String& str) {
+		String tmp;
+		tmp.size = size + str.size;
+		tmp.buf = new char[size + str.size + 1];
+		int i = 0;
+		int j = size;
+		for (i; i < size; i++) tmp[i] = this->buf[i];
+		for (i = 0; i < str.size; i++, j++) tmp[j] = str[i];
+		tmp[size + str.size] = '\0';
+		return tmp;
+	}
+	bool operator==(String& str) {
+		return (bool)(!myCmp(this->buf, str.buf));
+	}
+	bool operator!=(String& str) {
+		return (bool)myCmp(this->buf, str.buf);
+	}
+	bool operator>(String& str) {
+		if (myCmp(this->buf, str.buf) == 2)
+			return true;
+		else
+			return false;
+	}
+	bool operator<(String& str) {
+		if(myCmp(this->buf, str.buf) == -1)
+			return true;
+		else
+			return false;
+	}
+};
+
+/*=============================================================================================*/
+
 class schedule {
 private:
 	int num;
-	char name[124];
-	char type[16];
+	String name;
+	String type;
 	int costOf;
 	int lenLine;
 public:
@@ -147,25 +280,23 @@ public:
 		lenLine = 0;
 		return;
 	}
-	void setNum(unsigned int _num) {
+	void setNum(int _num) {
 		num = _num;
 		return;
 	}
 	void setName(char* _name) {
-		for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
-		this->name[myLen(_name)] = '\0';
+		name.setBuf(_name);
 		return;
 	}
 	void setType(char* _type) {
-		for (int i = 0; i < myLen(_type); i++) this->type[i] = _type[i];
-		this->type[myLen(_type)] = '\0';
+		type.setBuf(_type);
 		return;
 	}
-	void setCostOf(unsigned int _costOf) {
+	void setCostOf(int _costOf) {
 		this->costOf = _costOf;
 		return;
 	}
-	void setLen(unsigned int _len) {
+	void setLen(int _len) {
 		this->lenLine = _len;
 		return;
 	}
@@ -173,10 +304,10 @@ public:
 		return this->num;
 	}
 	char* getName(void) {
-		return this->name;
+		return name.getStr();
 	}
 	char* getType(void) {
-		return this->type;
+		return type.getStr();
 	}
 	unsigned int getCostOf(void) {
 		return this->costOf;
@@ -186,8 +317,12 @@ public:
 	}
 	void read(ifstream& file) {
 		file.read((char*)&num, sizeof(int));
-		file.read(name, 124);
-		file.read(type, 16);
+		char tmpName[124];
+		char tmpType[16];
+		file.read(tmpName, 124);
+		name.setBuf(tmpName);
+		file.read(tmpType, 16);
+		type.setBuf(tmpType);
 		file.read((char*)&costOf, sizeof(int));
 		file.read((char*)&lenLine, sizeof(int));
 		file.read(&newLine, 1);
@@ -195,8 +330,8 @@ public:
 	}
 	void write(ofstream& file) {
 		file.write((char*)&num, sizeof(int));
-		file.write(name, 124);
-		file.write(type, 16);
+		file.write(name.getStr(), 124);
+		file.write(type.getStr(), 16);
 		file.write((char*)&costOf, sizeof(int));
 		file.write((char*)&lenLine, sizeof(int));
 		file.write(&newLine, 1);
@@ -204,15 +339,19 @@ public:
 	}
 };
 
+/*=============================================================================================*/
+
 int main(int argc, const char* argv[]) {
 
 	system("clear");
 
-	unsigned int num;
+	/*=============================================================================================*/
+
+	int num;
 	char name[124];
 	char type[16];
-	unsigned int costOf;
-	unsigned int lenLine;
+	int costOf;
+	int lenLine;
 
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
@@ -220,6 +359,8 @@ int main(int argc, const char* argv[]) {
 	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "--help"))) help(), exit(0);
 	// Вывод информации об авторе
 	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "--info"))) info(), exit(0);
+
+	/*=============================================================================================*/
 
 	if (!myCmp(argv[1], "-c") && argc == 4) {
 		system("clear");
@@ -247,6 +388,8 @@ int main(int argc, const char* argv[]) {
 		bufout = nullptr;
 	}
 
+	/*=============================================================================================*/
+
 	if (!myCmp(argv[1], "-r") && argc == 4) {
 		system("clear");
 		ifstream fileIn(argv[3], ios::binary);
@@ -257,16 +400,16 @@ int main(int argc, const char* argv[]) {
 		fileIn.read(&newLine, 1);
 		while (!fileIn.eof() && counter < myAtoi(argv[2])) {
 			bufin[counter].read(fileIn);
-			if(fileIn.eof()) break;
-			cout << bufin[counter].getNum() 
-				<< "\t" 
+			if (fileIn.eof()) break;
+			cout << bufin[counter].getNum()
+				<< "\t"
 				<< bufin[counter].getName()
-				<< "\t" 
-				<< bufin[counter].getType() 
+				<< "\t"
+				<< bufin[counter].getType()
 				<< "\t"
 				<< bufin[counter].getCostOf()
 				<< "\t"
-				<< bufin[counter].getLen() 
+				<< bufin[counter].getLen()
 				<< "\t\n";
 			counter++;
 		}
@@ -276,6 +419,8 @@ int main(int argc, const char* argv[]) {
 		delete[] bufin;
 		bufin = nullptr;
 	}
+
+	/*=============================================================================================*/
 
 	return 0;
 }
