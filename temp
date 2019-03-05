@@ -1,10 +1,10 @@
 /***********************************************************************************************/
-/*       Функция: FilePrintLine(file):file                                                     */
-/*       Цель:  Написать программу, принимающую в качестве аргумента командной строки          */
-/*имя текстового файла и выводящую содержимое файла в стандартный поток вывода. Если содержимое*/
-/* файла не умещается на одном машинном экране, файл выводится постранично: сначала первая     */
-/* страница, потом вторая и так далее. Каждая последующая страница выводится на экран после    */
-/* нажатия пользователем клавиши Enter.                                                        */
+/*       Функция: FilePrintLine2(file):file                                                     */
+/*       Цель:Согласно заданию составить алгоритм и написать программу на языке С++.           */
+/* Программа компилируется и запускается под управлением ОС Linux. Разработанная               */
+/* программа должна содержать встроенную справочную информации, описывающую правила            */
+/* использования, цель назначения и информацию о разработчике. Аргументы запуска программа     */
+/* должна обрабатывать согласно рекомендациям POSIX.                                           */
 /*                                                                                             */
 /*       Исходные данные:                                                                      */
 /*         Файл неопределенной длинны                                                          */
@@ -17,7 +17,7 @@
 /*        - iostream                                                                           */
 /*        - cstdio                                                                             */
 /*---------------------------------------------------------------------------------------------*/
-/*       Дата: 2019 | 24 | 02                                                                  */
+/*       Дата: 2019 | 25 | 02                                                                  */
 /*       Автор: Васильев Кирилл Николаевич                                                     */
 /*       ver 1.01                                                                              */
 /*       Исправления: отсутствуют                                                              */
@@ -33,12 +33,15 @@
 // Подключение функций и классов стандартной библиотеки С++
 
 using std::cout;
+using std::endl;
+using std::cin;
+using std::cerr;
 
 /*=============================================================================================*/
 // Функция открытия файла с проверкой
 
-FILE* createFile(const char* str) {
-	FILE* file = fopen(str, "r");
+FILE* createFile(const char* str, const char* format) {
+	FILE* file = fopen(str, format);
 	if (file == nullptr) {
 		cout << "File " << str << " cannot be opened.\n";
 		exit(-1);
@@ -47,59 +50,42 @@ FILE* createFile(const char* str) {
 		return file;
 }
 
-/*=============================================================================================*/
-// Вывод 80 строк файла
-
-void printFile(FILE* fptr, int index, char* str) {
-	for (int i = index * 80; (i < (index + 1) * 80) && fgets(str, 1024, fptr); i++)
-		cout << str;
-	return;
-}
-
-/*=============================================================================================*/
-// Нажатие клавиши Enter
-
-bool pressEnter(FILE* fptr) {
-	bool res = true;
-	static int index(0);
-	char str[1024];
-	if (fgets(str, 1024, fptr)) {
-		system("clear");
-		index++;
-		printFile(fptr, index, str);
-	}
-	else
-		res = false;
-	return res;
-}
-
-/*=============================================================================================*/
-
 void logo(void) {
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** ";
 	cout << "\033[37;1m\033[40m" << "\n * Nizhniy Novgorod Technical University                   * ";
-	cout << "\033[37;1m\033[40m" << "\n * Study work number 3. Task number 4.                     * ";
+	cout << "\033[37;1m\033[40m" << "\n * Study work number 2. Task number 4.                     * ";
 	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Vasilev Kirill               * ";
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** \n\n";
 	return;
 }
 
-
 /*=============================================================================================*/
 // Функции вывода сообщений
 
 void error(void) {
-	cout << "Please enter text file name.\n";
+	cout << "1) \"-help\" or \"-h\" - manual" << endl;
+	cout << "2) \"-с [N] [file_name]\" - running the program in the mode of creating a spreadsheet records" << endl;
+	cout << "3) \"-r [N] [file_name]\" - run the program in the mode of reading the contents of a text file" << endl;
+	cout << "4) \"-i\" or \"-info\" - displays information about the author" << endl;
 	return;
 }
 
 void help(void) {
-	cout << "This program takes as input the name\nof an existing text file and displays its contents.\n";
+	cout << "1) \"-с [N] [file_name]\" - running the program in the mode of creating a spreadsheet records" << endl;
+	cout << "2) \"-r [N] [file_name]\" - run the program in the mode of reading the contents of a text file" << endl;
+	cout << "3) \"-i\" or \"-info\" - displays information about the author" << endl;
+	cout << "All records are stored in one line separated by spaces" << endl;
+	cout << "Records are stored in this order:" << endl;
+	cout << "1. Flight Number" << endl;
+	cout << "2. Flight Name" << endl;
+	cout << "3. Aircraft type" << endl;
+	cout << "4. Ticket price" << endl;
+	cout << "5. The length of the line, km" << endl;
 	return;
 }
 
 void info(void) {
-	logo();
+	cout << Logo;
 	return;
 }
 
@@ -130,6 +116,37 @@ int myCmp(const char* str1, const char* str2) {
 	return res;
 }
 
+int myAtoi(const char* str) {
+	int res = 0;
+	int i;
+	static char cmp[] = { "0123456789" };
+	for (i = 0; i < myLen(str); i++, res *= 10)
+		for (int j = 0; j < myLen(cmp); j++)
+			if (str[i] == cmp[j]) {
+				res += j;
+				break;
+			}
+	return (int)(res / 10);
+}
+
+template <typename T>
+void chek_in(T& a) {
+	while (!(cin >> a)) {
+		cerr << "Error\n";
+		cin.clear();
+		cin.ignore(132, '\n');
+	}
+	return;
+}
+
+struct schedule {
+	unsigned short int num;
+	char name[124];
+	char type[16];
+	unsigned short int costOf;
+	unsigned short int lenLine;
+};
+
 int main(int argc, const char* argv[]) {
 
 	system("clear");
@@ -137,17 +154,42 @@ int main(int argc, const char* argv[]) {
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
 	// Вывод справочной информации
-	if ((!myCmp(argv[1], "-h"))||(!myCmp(argv[1], "-help"))) help(), exit(0); 
+	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "-help"))) help(), exit(0);
 	// Вывод информации об авторе
-	if ((!myCmp(argv[1], "-i"))||(!myCmp(argv[1], "-info"))) info(), exit(0);
+	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "-info"))) info(), exit(0);
 
-	// Открытие файла
-	FILE* file = createFile(argv[1]);
-
-	// Постраничный вывод
-	while (pressEnter(file)) {
-		getchar();
-		continue;
+	if (!myCmp(argv[1], "-c") && argc == 4) {
+		system("clear");
+		FILE* fileOut = createFile(argv[3], "w");
+		schedule temp;
+		for (int i = 0; i < myAtoi(argv[2]); i++) {
+			cout << "Enter num: "; chek_in(temp.num);
+			cout << "Enter name: "; cin >> temp.name;
+			cout << "Enter type: "; cin >> temp.type;
+			cout << "Enter cost of"; chek_in(temp.costOf);
+			cout << "Enter length line, km: "; chek_in(temp.lenLine);
+			fprintf(fileOut, "%u\t%s\t%s\t%u\t%u\n", temp.num, temp.name, temp.type, temp.costOf, temp.lenLine);
+		}
+		fclose(fileOut);
 	}
+
+	if (!myCmp(argv[1], "-r") && argc == 4) {
+		system("clear");
+		FILE* fileIn = createFile(argv[3], "r");
+		schedule tempIn;
+		int count = 0;
+		while (fscanf(fileIn, "%u\t%s\t%s\t%u\t%u\n", &tempIn.num, tempIn.name, tempIn.type, &tempIn.costOf, &tempIn.lenLine) != EOF) {
+			if (!(count == myAtoi(argv[2]))) {
+				fprintf(stdout, "%u\t%s\t%s\t%u\t%u\n", tempIn.num, tempIn.name, tempIn.type, tempIn.costOf, tempIn.lenLine);
+				count++;
+			}
+			else {
+				break;
+			}
+		}
+		cout << "File is empty" << endl;
+		fclose(fileIn);
+	}
+
 	return 0;
 }
