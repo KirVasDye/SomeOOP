@@ -85,7 +85,7 @@ void help(void) {
 }
 
 void info(void) {
-	cout << Logo;
+	logo();
 	return;
 }
 
