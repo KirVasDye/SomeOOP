@@ -14,7 +14,6 @@
 /*                                                                                             */
 /*       Вызываемые модули:                                                                    */
 /*        - iostream                                                                           */
-/*        - fstream                                                                            */
 /*---------------------------------------------------------------------------------------------*/
 /*       Дата: 2019 | 25 | 02                                                                  */
 /*       Автор: Васильев Кирилл Николаевич                                                     */
@@ -26,7 +25,6 @@
 // Директивы препроцессора
 
 #include <iostream>
-#include <fstream>
 
 /*=============================================================================================*/
 // Подключение функций и классов стандартной библиотеки С++
@@ -35,16 +33,13 @@ using std::cout;
 using std::endl;
 using std::cin;
 using std::cerr;
-using std::ifstream;
-using std::ofstream;
-using std::ios;
 
 /*=============================================================================================*/
 
 void logo(void) {
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** ";
 	cout << "\033[37;1m\033[40m" << "\n * Nizhniy Novgorod Technical University                   * ";
-	cout << "\033[37;1m\033[40m" << "\n * Study work number 4. Task number 4.                     * ";
+	cout << "\033[37;1m\033[40m" << "\n * Study work number 5. Task number 4.                     * ";
 	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Vasilev Kirill               * ";
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** \n\n";
 	return;
@@ -54,24 +49,19 @@ void logo(void) {
 // Функции вывода сообщений
 
 void error(void) {
-	cout << "1) \"-help\" or \"-h\" - manual" << endl;
-	cout << "2) \"-с [N] [file_name]\" - running the program in the mode of creating a spreadsheet records" << endl;
-	cout << "3) \"-r [N] [file_name]\" - run the program in the mode of reading the contents of a text file" << endl;
-	cout << "4) \"-i\" or \"-info\" - displays information about the author" << endl;
+	cout << "1) \"--help\" or \"-h\" - manual" << endl;
+	cout << "2) \"-r\" - running the program in the mode of creating a spreadsheet records" << endl;
+	cout << "3) \"-i\" or \"--info\" - displays information about the author" << endl;
 	return;
 }
 
 void help(void) {
-	cout << "1) \"-с [N] [file_name]\" - running the program in the mode of creating a spreadsheet records" << endl;
-	cout << "2) \"-r [N] [file_name]\" - run the program in the mode of reading the contents of a text file" << endl;
-	cout << "3) \"-i\" or \"-info\" - displays information about the author" << endl;
+	cout << "1) \"-r\" - running the program in the mode of creating a spreadsheet records" << endl;
+	cout << "2) \"-i\" or \"--info\" - displays information about the author" << endl;
 	cout << "All records are stored in one line separated by spaces" << endl;
 	cout << "Records are stored in this order:" << endl;
-	cout << "1. Flight Number" << endl;
-	cout << "2. Flight Name" << endl;
-	cout << "3. Aircraft type" << endl;
-	cout << "4. Ticket price" << endl;
-	cout << "5. The length of the line, km" << endl;
+	cout << "1. Name" << endl;
+	cout << "2. Age" << endl;
 	return;
 }
 
@@ -96,11 +86,7 @@ int myLen(const char* str) {
 
 int myCmp(const char* str1, const char* str2) {
 	int res = 0;
-	if (myLen(str1) > myLen(str2)) {
-		res = 2;
-		return res;
-	}
-	if (myLen(str1) < myLen(str2)) {
+	if (myLen(str1) != myLen(str2)) {
 		res = -1;
 		return res;
 	}
@@ -141,204 +127,99 @@ void chek_in(T& a) {
 }
 
 /*=============================================================================================*/
-
-class TCharArray {
-private:
-	char& at(int index) {
-		if (index >= 0 && index < this->size)
-			return this->buf[index];
-		else {
-			cout << "Appeal to a non-existent element" << endl;
-			exit(-1);
-		}
-	}
-
+// Родительский класс человек
+class Human {
+	friend void print(Human* human);
+	friend void scan(Human* human);
 protected:
-	char* buf;
-	int size;
+	char name[100];
+	int age;
 
 public:
-	TCharArray(void) {
-		buf = nullptr;
-		size = 0;
+	Human() {
+		name[0] = '\0';
+		age = 0;
 		return;
 	}
-	~TCharArray(void) {
-		delete[] buf;
-		buf = nullptr;
-		size = 0;
+	Human(const char* _name, int _age) {
+		for (int i = 0; i < myLen(_name); i++) name[i] = _name[i];
+		name[myLen(_name)] = '\0';
+		age = _age;
 		return;
 	}
-	TCharArray(char* str) {
-		this->size = myLen(str);
-		this->buf = new char[this->size + 1];
-		for (int i = 0; i < this->size; i++)
-			this->buf[i] = str[i];
-		this->buf[this->size] = '\0';
+	virtual void myJob() {
+		cout << "I have no job" << endl;
 		return;
 	}
-	void setBuf(char* str) {
-		if (this->buf == nullptr) {
-			this->size = myLen(str);
-			this->buf = new char[this->size + 1];
-			for (int i = 0; i < this->size; i++)
-				this->buf[i] = str[i];
-			this->buf[this->size] = '\0';
-		}
-		else {
-			delete[] this->buf;
-			this->size = myLen(str);
-			this->buf = new char[this->size + 1];
-			for (int i = 0; i < this->size; i++)
-				this->buf[i] = str[i];
-			this->buf[this->size] = '\0';
-		}
+	virtual ~Human() {
+		name[0] = '\0';
+		age = 0;
 		return;
-	}
-	int length(void) {
-		return this->size;
-	}
-	char& operator[](int index) {
-		return this->at(index);
-	}
-};
-
-class String : public TCharArray {
-public:
-	String(void) : TCharArray() {};
-	String(char* str) : TCharArray(str) {};
-	~String(void) {
-		delete[] buf;
-		buf = nullptr;
-		size = 0;
-		return;
-	}
-	void setStr(String& str) {
-		if (this->buf == nullptr) {
-			this->size = str.size;
-			this->buf = new char[this->size + 1];
-			for (int i = 0; i < this->size; i++)
-				this->buf[i] = str[i];
-			this->buf[this->size] = '\0';
-		}
-		else {
-			delete[] this->buf;
-			this->size = str.size;
-			this->buf = new char[this->size + 1];
-			for (int i = 0; i < this->size; i++)
-				this->buf[i] = str[i];
-			this->buf[this->size] = '\0';
-		}
-		return;
-	}
-	char* getStr(void) {
-		return this->buf;
-	}
-	String operator+(String& str) {
-		String tmp;
-		tmp.size = size + str.size;
-		tmp.buf = new char[size + str.size + 1];
-		int i = 0;
-		int j = size;
-		for (i; i < size; i++) tmp[i] = this->buf[i];
-		for (i = 0; i < str.size; i++, j++) tmp[j] = str[i];
-		tmp[size + str.size] = '\0';
-		return tmp;
-	}
-	bool operator==(String& str) {
-		return (bool)(!myCmp(this->buf, str.buf));
-	}
-	bool operator!=(String& str) {
-		return (bool)myCmp(this->buf, str.buf);
-	}
-	bool operator>(String& str) {
-		if (myCmp(this->buf, str.buf) == 2)
-			return true;
-		else
-			return false;
-	}
-	bool operator<(String& str) {
-		if(myCmp(this->buf, str.buf) == -1)
-			return true;
-		else
-			return false;
 	}
 };
 
 /*=============================================================================================*/
-
-class schedule {
-private:
-	int num;
-	String name;
-	String type;
-	int costOf;
-	int lenLine;
+// Производные классы
+class Student : public Human {
 public:
-	schedule(void) {
-		num = 0;
-		costOf = 0;
-		lenLine = 0;
+	Student() : Human() {};
+	Student(const char* _name, int _age) : Human(_name, _age) {};
+	void myJob() override {
+		cout << "I'm student" << endl;
 		return;
 	}
-	void setNum(int _num) {
-		num = _num;
-		return;
-	}
-	void setName(char* _name) {
-		name.setBuf(_name);
-		return;
-	}
-	void setType(char* _type) {
-		type.setBuf(_type);
-		return;
-	}
-	void setCostOf(int _costOf) {
-		this->costOf = _costOf;
-		return;
-	}
-	void setLen(int _len) {
-		this->lenLine = _len;
-		return;
-	}
-	unsigned int getNum(void) {
-		return this->num;
-	}
-	char* getName(void) {
-		return name.getStr();
-	}
-	char* getType(void) {
-		return type.getStr();
-	}
-	unsigned int getCostOf(void) {
-		return this->costOf;
-	}
-	unsigned int getLen(void) {
-		return this->lenLine;
-	}
-	void read(ifstream& file) {
-		file.read((char*)&num, sizeof(int));
-		char tmpName[124];
-		char tmpType[16];
-		file.read(tmpName, 124);
-		name.setBuf(tmpName);
-		file.read(tmpType, 16);
-		type.setBuf(tmpType);
-		file.read((char*)&costOf, sizeof(int));
-		file.read((char*)&lenLine, sizeof(int));
-		file.read(&newLine, 1);
-		return;
-	}
-	void write(ofstream& file) {
-		file.write((char*)&num, sizeof(int));
-		file.write(name.getStr(), 124);
-		file.write(type.getStr(), 16);
-		file.write((char*)&costOf, sizeof(int));
-		file.write((char*)&lenLine, sizeof(int));
-		file.write(&newLine, 1);
-		return;
-	}
+	~Student() override {};
 };
+
+class Programmer : public Student {
+public:
+	Programmer() : Student() {};
+	Programmer(const char* _name, int _age) : Student(_name, _age) {};
+	void myJob() override {
+		cout << "I'm programmer" << endl;
+		return;
+	}
+	~Programmer() override {};
+};
+
+class Tester : public Student {
+public:
+	Tester() : Student() {};
+	Tester(const char* _name, int _age) : Student(_name, _age) {};
+	void myJob() override {
+		cout << "I'm tester" << endl;
+		return;
+	}
+	~Tester() override {};
+};
+
+class Chief : public Programmer {
+public:
+	Chief() : Programmer() {};
+	Chief(const char* _name, int _age) : Programmer(_name, _age) {};
+	void myJob() override {
+		cout << "I'm chief this place" << endl;
+		return;
+	}
+	~Chief() override {};
+};
+
+/*=============================================================================================*/
+// Вывод
+void print(Human* human) {
+	cout << human->name << " " << human->age;
+	human->myJob();
+	cout << endl;
+	return;
+}
+
+/*=============================================================================================*/
+// Ввод
+void scan(Human* human) {
+	cin >> human->name;
+	chek_in(human->age);
+	return;
+}
 
 /*=============================================================================================*/
 
@@ -347,12 +228,6 @@ int main(int argc, const char* argv[]) {
 	system("clear");
 
 	/*=============================================================================================*/
-
-	int num;
-	char name[124];
-	char type[16];
-	int costOf;
-	int lenLine;
 
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
@@ -363,66 +238,27 @@ int main(int argc, const char* argv[]) {
 
 	/*=============================================================================================*/
 
-	if (!myCmp(argv[1], "-c") && argc == 4) {
-		system("clear");
-		int count = myAtoi(argv[2]);
-		ofstream fileOut(argv[3], ios::binary);
-		schedule* bufout = new schedule[count];
-		fileOut.write((char*)&count, sizeof(int));
-		fileOut.write(&newLine, 1);
-		for (int i = 0; i < myAtoi(argv[2]); i++) {
-			cout << "Enter num: "; chek_in(num);
-			cout << "Enter name: "; cin >> name;
-			cout << "Enter type: "; cin >> type;
-			cout << "Enter cost of: "; chek_in(costOf);
-			cout << "Enter length line, km: "; chek_in(lenLine);
-			bufout[i].setNum(num);
-			bufout[i].setName(name);
-			bufout[i].setType(type);
-			bufout[i].setCostOf(costOf);
-			bufout[i].setLen(lenLine);
-			bufout[i].write(fileOut);
-			system("clear");
-		}
-		fileOut.close();
-		delete[] bufout;
-		bufout = nullptr;
-	}
+	if (!myCmp(argv[1], "-r")) {
 
-	/*=============================================================================================*/
+		// Объявляем 5 класоов
+		Human alpha;
+		Student beta;
+		Programmer teta;
+		Tester gamma;
+		Chief delta;
+		Human* buf[5];
 
-	if (!myCmp(argv[1], "-r") && argc == 4) {
-		system("clear");
-		ifstream fileIn(argv[3], ios::binary);
-		schedule* bufin = new schedule[myAtoi(argv[2])];
-		int counter = 0;
-		int countStolb;
-		fileIn.read((char*)&countStolb, sizeof(int));
-		fileIn.read(&newLine, 1);
-		while (!fileIn.eof() && counter < myAtoi(argv[2])) {
-			bufin[counter].read(fileIn);
-			if (fileIn.eof()) break;
-			cout << bufin[counter].getNum()
-				<< "\t"
-				<< bufin[counter].getName()
-				<< "\t"
-				<< bufin[counter].getType()
-				<< "\t"
-				<< bufin[counter].getCostOf()
-				<< "\t"
-				<< bufin[counter].getLen()
-				<< "\t\n";
-			counter++;
-		}
-		cout << "File is empty" << endl;
-		cout << "Number of records = " << countStolb << endl;
-		fileIn.close();
-		delete[] bufin;
-		bufin = nullptr;
+		// Производим считывание
+		scan(&alpha); buf[0] = &alpha;
+		scan(&beta); buf[1] = &beta;
+		scan(&teta); buf[2] = &teta;
+		scan(&gamma); buf[3] = &gamma;
+		scan(&delta); buf[4] = &delta;
+
+		for (int i = 0; i < 5; i++) print(buf[i]);
 	}
 
 	/*=============================================================================================*/
 
 	return 0;
 }
-
