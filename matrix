@@ -1,11 +1,27 @@
-#include<iostream>
+#pragma once
+/****************************************************************************/
+/*                                                                          */
+/*       Библиотека для работы с квадратными матрицами                      */
+/*                                                                          */
+/****************************************************************************/
+
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 using std::cout;
 using std::cin;
 using std::cerr;
 
 template <typename T>
-void chek_in(T& a) {
+T myAbs(T num) { // Модуль числа.
+	return num > 0 ? num : -num;
+}
+
+template <typename T>
+void chek_in(T& a) { // Функция проверки ввода.
 	while (!(cin >> a)) {
 		cerr << "Error\n";
 		cin.clear();
@@ -17,28 +33,33 @@ class matrix {
 
 private:
 
-	int size; // Размер матрицы
-	double** arr; // Указатель на двумерный динамический массив
-	matrix minorom(const int& index1, const int& index2); // Взятие минорома
-	double det1D(void); // Определитель одинарной матрицы
-	double det2D(void); // Определитель двойной матрицы
-	double det3D(void); // Определитель тройной матрицы
-	double aldop(const int& index1, const int& index2); // Алгебраическое дополнение
+	int size; // Размер матрицы.
+	double** arr; // Указатель на двумерный динамический массив.
+	matrix minorom(const int& index1, const int& index2); // Взятие минорома.
+	double det1D(void); // Определитель одинарной матрицы.
+	double det2D(void); // Определитель двойной матрицы.
+	double det3D(void); // Определитель тройной матрицы.
+	double aldop(const int& index1, const int& index2); // Алгебраическое дополнение.
+	void setSize(int _size); // Установка нового размера.
 
 public:
 
 	/*=====================================================================================================================================================*/
 
-	matrix(); // Конструктор по умолчанию
-	matrix(int& _size); // Конструктор с параметром размера
-	matrix(matrix& exist); // Конструктор с параметром существующей матрицы
-	~matrix(); // Деструктор по умолчанию
-	void setSize(int& _size); // Установка нового размера
-	int getSize(); // Взятие размера
-	void setArr(double* _arr, int n); // Установка матрицы через одномерный массив
-	double* getArr(const matrix& exist, int& len); // Взятие массива, вторым параметром идет переменная в которую будет производиться запись размера
-	void clear(void); // Заполнение нулями
-	void destroy(void); // Принудительный деструктор
+	matrix(void); // Конструктор по умолчанию.
+	matrix(int& _size); // Конструктор с параметром размера.
+	matrix(matrix& exist); // Конструктор с параметром существующей матрицы.
+	~matrix(void); // Деструктор по умолчанию.
+	int getSize(void); // Взятие размера.
+	void setArr(double* _arr, int n); // Установка матрицы через одномерный массив.
+	double* getArr(int& len); // Взятие массива, первым параметром идет переменная в которую будет производиться запись размера.
+	void clear(void); // Заполнение нулями.
+	void random(void); // Заполнение случайно сгенерированными числами.
+	void destroy(void); // Принудительный деструктор.
+	void setStr(double* _arr, const int& numStr); // Установка строки вместо numStr.
+	double* getStr(const int& index); // Взятие строки с индексом index.
+	void setStolb(double* _arr, const int& numStolb); // Установка столбца _arr вместо numStolb.
+	double* getStolb(const int& index); // Взятие столбца с индексом index.
 
 	/*=====================================================================================================================================================*/
 
@@ -51,6 +72,7 @@ public:
 	template <typename T>
 	matrix operator+(T& other);
 	matrix& operator--(void);
+	matrix operator*(matrix& other);
 	template <typename T>
 	matrix operator*(T& other);
 	template <typename T>
@@ -62,17 +84,22 @@ public:
 
 	// Блок сложных операций:
 
-	void print(void); // Печать матрицы
-	void printStr(const int& indexStr); // Печать строки
-	void printStolb(const int& indexStolb); // Печать столбца
-	double det(void); // Общий определитель
+	void print(void); // Печать матрицы.
+	void save(std::ofstream& file); // Сохранение матрицы в файле.
+	void load(std::ifstream& file); // Загрузка значений из файла.
+	void printStr(const int& indexStr); // Печать строки.
+	void printStolb(const int& indexStolb); // Печать столбца.
+	double det(void); // Общий определитель.
+	matrix& transp(void); // Транспонированная матрица.
+	matrix& revers(void); // Обратная матрица
+	bool isExist(void); // Проверка существования.
 
 	/*=====================================================================================================================================================*/
 };
 
 // Блок определения функций:
 
-matrix::matrix() {
+matrix::matrix(void) {
 	this->size = 0;
 	this->arr = nullptr;
 	cout << "Сработал конструтор\n";
@@ -103,7 +130,7 @@ matrix::matrix(matrix& exist) {
 	return;
 }
 
-matrix::~matrix() {
+matrix::~matrix(void) {
 	if (this->arr != nullptr) {
 		for (int i = 0; i < this->size; i++)
 			delete[] this->arr[i];
@@ -115,15 +142,15 @@ matrix::~matrix() {
 	return;
 }
 
-void matrix::setSize(int& _size) {
+void matrix::setSize(int _size) {
 
 	if (this->arr == nullptr) {
 		this->size = _size;
 		this->arr = new double*[this->size];
-			for (int i = 0; i < this->size; i++)
-				this->arr[i] = new double[this->size];
 		for (int i = 0; i < this->size; i++)
-			for (int j = 0; j <this->size; j++)
+			this->arr[i] = new double[this->size];
+		for (int i = 0; i < this->size; i++)
+			for (int j = 0; j < this->size; j++)
 				this->arr[i][j] = 0;
 	}
 	else {
@@ -140,9 +167,9 @@ void matrix::setSize(int& _size) {
 				this->arr[i][j] = 0;
 	}
 	return;
-} 
+}
 
-int matrix::getSize() {
+int matrix::getSize(void) {
 	int _size = this->size;
 	return _size;
 }
@@ -158,13 +185,13 @@ void matrix::setArr(double* _arr, int n) {
 	return;
 }
 
-double* matrix::getArr(const matrix& exist, int& len) {
-	int n = exist.size;
+double* matrix::getArr(int& len) {
+	int n = size;
 	len = n * n;
 	double* resArr = new double[n];
 	for (int i = 0; i < n; i++)
 		for (int j = 0, k = 0; j < n; j++, k++)
-			resArr[k] = exist.arr[i][j];
+			resArr[k] = arr[i][j];
 	return resArr;
 }
 
@@ -349,7 +376,7 @@ void matrix::print(void) {
 	else {
 		for (int i = 0; i < this->size; i++) {
 			for (int j = 0; j < size; j++) {
-				cout << this->arr[i][j] << "\t";
+				cout << this->arr[i][j] << " ";
 			}
 			cout << "\n";
 		}
@@ -420,4 +447,98 @@ double matrix::det(void) {
 		sum += this->aldop(i, 0)*minorom(i, 0).det();
 	}
 	return sum;
+}
+
+bool matrix::isExist(void) {
+	return(this->arr != nullptr);
+}
+
+void matrix::setStolb(double* _arr, const int& numStolb) {
+	for (int i = 0; i < this->size; i++)
+		this->arr[i][numStolb] = _arr[i];
+	return;
+}
+
+double* matrix::getStolb(const int& index) {
+	double* res = new double[this->size];
+	for (int i = 0; i < this->size; i++)
+		res[i] = this->arr[i][index];
+	return res;
+}
+
+void matrix::random(void) {
+	srand(time(nullptr));
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			arr[i][j] = rand() % 20;
+	return;
+}
+
+void matrix::save(std::ofstream& file) {
+	for (int i = 0; i < this->size; i++) {
+		for (int j = 0; j < size; j++) {
+			file << this->arr[i][j] << " ";
+		}
+		file << "\n";
+	}
+}
+
+void matrix::load(std::ifstream& file) {
+	double buf[1024];
+	int i = 0;
+	while (file>>buf[i]) {
+		i++;
+	}
+	this->setSize((i + 1) / 2);
+	this->setArr(buf, i + 1);
+	return;
+}
+
+void matrix::setStr(double* _arr, const int& numStr) {
+	for (int i = 0; i < this->size; i++)
+		this->arr[numStr][i] = _arr[i];
+	return;
+}
+
+double* matrix::getStr(const int& index) {
+	double* res = new double[this->size];
+	for (int i = 0; i < this->size; i++)
+		res[i] = this->arr[index][i];
+	return res;
+}
+
+matrix& matrix::transp(void) {
+	double* buf;
+	for (int i = 0; i < size; i++) {
+		buf = this->getStr(i);
+		this->setStolb(buf, i);
+	}
+	return *this;
+}
+
+matrix& matrix::revers(void) {
+	if (this->det() == 0) {
+		cerr << "Ошиебка взятия обратной матрицы\n";
+		exit(-1);
+	}
+	double tmp = this->det();
+	tmp = 1 / tmp;
+	this->transp() * tmp;
+	return *this;
+}
+
+matrix matrix::operator*(matrix& other) {
+	if (size != other.size) {
+		cerr << "Попытка перемножить две не совпадающие матрицы\n";
+		exit(-1);
+	}
+	matrix res(size);
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
+			for (int k = 0; k < size; k++) {
+				res.arr[i][j] += arr[i][k] * other.arr[k][j];
+			}
+		}
+	}
+	return res;
 }
