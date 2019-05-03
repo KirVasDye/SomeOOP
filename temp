@@ -1,9 +1,10 @@
 /***********************************************************************************************/
-/*       Цель:Согласно заданию составить алгоритм и написать программу на языке С++.           */
-/* Программа компилируется и запускается под управлением ОС Linux. Разработанная               */
-/* программа должна содержать встроенную справочную информации, описывающую правила            */
-/* использования, цель назначения и информацию о разработчике. Аргументы запуска программа     */
-/* должна обрабатывать согласно рекомендациям POSIX.                                           */
+/*       Функция: FilePrintLine(file):file                                                     */
+/*       Цель:  Написать программу, принимающую в качестве аргумента командной строки          */
+/*имя текстового файла и выводящую содержимое файла в стандартный поток вывода. Если содержимое*/
+/* файла не умещается на одном машинном экране, файл выводится постранично: сначала первая     */
+/* страница, потом вторая и так далее. Каждая последующая страница выводится на экран после    */
+/* нажатия пользователем клавиши Enter.                                                        */
 /*                                                                                             */
 /*       Исходные данные:                                                                      */
 /*         Файл неопределенной длинны                                                          */
@@ -14,9 +15,13 @@
 /*                                                                                             */
 /*       Вызываемые модули:                                                                    */
 /*        - iostream                                                                           */
+/*        - cstdio                                                                             */
+/*        - cstring                                                                            */
+/*        - string                                                                             */
+/*        - cstdlib                                                                            */
 /*---------------------------------------------------------------------------------------------*/
-/*       Дата: 2019 | 25 | 02                                                                  */
-/*       Автор: Васильев Кирилл Николаевич                                                     */
+/*       Дата: 2019 | 24 | 02                                                                  */
+/*       Автор: Розно Константин                                                               */
 /*       ver 1.01                                                                              */
 /*       Исправления: отсутствуют                                                              */
 /***********************************************************************************************/
@@ -25,240 +30,69 @@
 // Директивы препроцессора
 
 #include <iostream>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
 
 /*=============================================================================================*/
 // Подключение функций и классов стандартной библиотеки С++
 
+using std::string;
 using std::cout;
-using std::endl;
-using std::cin;
-using std::cerr;
+using std::ifstream;
+using std::getline;
 
-/*=============================================================================================*/
-
-void logo(void) {
+void logo() {
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** ";
 	cout << "\033[37;1m\033[40m" << "\n * Nizhniy Novgorod Technical University                   * ";
-	cout << "\033[37;1m\033[40m" << "\n * Study work number 5. Task number 4.                     * ";
-	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Vasilev Kirill               * ";
+	cout << "\033[37;1m\033[40m" << "\n * Study work number 20. Task number 1.                    * ";
+	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Rozno Konstantin             * ";
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** \n\n";
 	return;
 }
 
-/*=============================================================================================*/
-// Функции вывода сообщений
-
-void error(void) {
-	cout << "1) \"--help\" or \"-h\" - manual" << endl;
-	cout << "2) \"-r\" - running the program in the mode of creating a spreadsheet records" << endl;
-	cout << "3) \"-i\" or \"--info\" - displays information about the author" << endl;
+void error() {
+	cout << "Please enter text file name.\n";
 	return;
 }
 
-void help(void) {
-	cout << "1) \"-r\" - running the program in the mode of creating a spreadsheet records" << endl;
-	cout << "2) \"-i\" or \"--info\" - displays information about the author" << endl;
-	cout << "All records are stored in one line separated by spaces" << endl;
-	cout << "Records are stored in this order:" << endl;
-	cout << "1. Name" << endl;
-	cout << "2. Age" << endl;
+void help() {
+	cout << "This program takes as input the name\nof an existing text file and displays its contents.\n";
 	return;
 }
-
-void info(void) {
-	logo();
-	return;
-}
-
-char newLine('\n');
-
-/*=============================================================================================*/
-// Реализуем функцию похожую на "int strlen(const char* str) {...}"
-
-int myLen(const char* str) {
-	int res = 0;
-	for (res; str[res] != '\0'; res++);
-	return res;
-}
-
-/*=============================================================================================*/
-// Реализуем функцию похожую на "int strcmp(const char* str1, const char* str2) {...}"
-
-int myCmp(const char* str1, const char* str2) {
-	int res = 0;
-	if (myLen(str1) != myLen(str2)) {
-		res = -1;
-		return res;
-	}
-	for (int i = 0; i < myLen(str1); i++) {
-		if (str1[i] != str2[i]) {
-			res = 1;
-			break;
-		}
-	}
-	return res;
-}
-
-/*=============================================================================================*/
-
-int myAtoi(const char* str) {
-	int res = 0;
-	int i;
-	static char cmp[] = { "0123456789" };
-	for (i = 0; i < myLen(str); i++, res *= 10)
-		for (int j = 0; j < myLen(cmp); j++)
-			if (str[i] == cmp[j]) {
-				res += j;
-				break;
-			}
-	return (int)(res / 10);
-}
-
-/*=============================================================================================*/
-
-template <typename T>
-void chek_in(T& a) {
-	while (!(cin >> a)) {
-		cerr << "Error\n";
-		cin.clear();
-		cin.ignore(132, '\n');
-	}
-	return;
-}
-
-/*=============================================================================================*/
-// Родительский класс человек
-class Human {
-	friend void print(Human* human);
-	friend void scan(Human* human);
-protected:
-	char name[100];
-	int age;
-
-public:
-	Human() {
-		name[0] = '\0';
-		age = 0;
-		return;
-	}
-	Human(const char* _name, int _age) {
-		for (int i = 0; i < myLen(_name); i++) name[i] = _name[i];
-		name[myLen(_name)] = '\0';
-		age = _age;
-		return;
-	}
-	virtual void myJob() {
-		cout << "I have no job" << endl;
-		return;
-	}
-	virtual ~Human() {
-		name[0] = '\0';
-		age = 0;
-		return;
-	}
-};
-
-/*=============================================================================================*/
-// Производные классы
-class Student : public Human {
-public:
-	Student() : Human() {};
-	Student(const char* _name, int _age) : Human(_name, _age) {};
-	void myJob() override {
-		cout << "I'm student" << endl;
-		return;
-	}
-	~Student() override {};
-};
-
-class Programmer : public Student {
-public:
-	Programmer() : Student() {};
-	Programmer(const char* _name, int _age) : Student(_name, _age) {};
-	void myJob() override {
-		cout << "I'm programmer" << endl;
-		return;
-	}
-	~Programmer() override {};
-};
-
-class Tester : public Student {
-public:
-	Tester() : Student() {};
-	Tester(const char* _name, int _age) : Student(_name, _age) {};
-	void myJob() override {
-		cout << "I'm tester" << endl;
-		return;
-	}
-	~Tester() override {};
-};
-
-class Chief : public Programmer {
-public:
-	Chief() : Programmer() {};
-	Chief(const char* _name, int _age) : Programmer(_name, _age) {};
-	void myJob() override {
-		cout << "I'm chief this place" << endl;
-		return;
-	}
-	~Chief() override {};
-};
-
-/*=============================================================================================*/
-// Вывод
-void print(Human* human) {
-	cout << human->name << " " << human->age;
-	human->myJob();
-	cout << endl;
-	return;
-}
-
-/*=============================================================================================*/
-// Ввод
-void scan(Human* human) {
-	cin >> human->name;
-	chek_in(human->age);
-	return;
-}
-
-/*=============================================================================================*/
 
 int main(int argc, const char* argv[]) {
-
-	system("clear");
-
-	/*=============================================================================================*/
-
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
 	// Вывод справочной информации
-	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "--help"))) help(), exit(0);
+	if ((!strcmp(argv[1], "-h")) || (!strcmp(argv[1], "-help"))) help(), exit(0);
 	// Вывод информации об авторе
-	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "--info"))) info(), exit(0);
+	if ((!strcmp(argv[1], "-i")) || (!strcmp(argv[1], "-info"))) logo(), exit(0);
 
-	/*=============================================================================================*/
+	ifstream file(argv[1]);
 
-	if (!myCmp(argv[1], "-r")) {
-
-		// Объявляем 5 класоов
-		Human alpha;
-		Student beta;
-		Programmer teta;
-		Tester gamma;
-		Chief delta;
-		Human* buf[5];
-
-		// Производим считывание
-		scan(&alpha); buf[0] = &alpha;
-		scan(&beta); buf[1] = &beta;
-		scan(&teta); buf[2] = &teta;
-		scan(&gamma); buf[3] = &gamma;
-		scan(&delta); buf[4] = &delta;
-
-		for (int i = 0; i < 5; i++) print(buf[i]);
+	if (!file.is_open()) {
+		cout << "File " << argv[1] << " cannot be opened.\n";
+		exit(-1);
 	}
 
-	/*=============================================================================================*/
+	string str;
 
+	int word = 0, space = 0, simbol = 0, predl = 0, bukva = 0;
+	while (getline(file, str)) {
+		for (int i = 0; i < str.length(); i++) {
+			if (str[i] == ' ') space++, word++;
+			if (str[i] == '.') predl++;
+			if ((str[i] >= 'a'&&str[i] <= 'z') || (str[i] >= 'A'&&str[i] <= 'Z')) bukva++;
+		}
+		simbol += str.length();
+	}
+	cout << "1) " << simbol << "\n";
+	cout << "2) " << simbol-space << "\n";
+	cout << "3) " << bukva << "\n";
+	cout << "4) " << word << "\n";
+	cout << "5) " << predl << "\n";
 	return 0;
 }
