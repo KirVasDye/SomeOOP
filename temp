@@ -1,10 +1,10 @@
 /***********************************************************************************************/
-/*       Функция: FilePrintLine(file):file                                                     */
-/*       Цель:  Написать программу, принимающую в качестве аргумента командной строки          */
-/*имя текстового файла и выводящую содержимое файла в стандартный поток вывода. Если содержимое*/
-/* файла не умещается на одном машинном экране, файл выводится постранично: сначала первая     */
-/* страница, потом вторая и так далее. Каждая последующая страница выводится на экран после    */
-/* нажатия пользователем клавиши Enter.                                                        */
+/*       Функция: FilePrintLine2(file):file                                                     */
+/*       Цель:Согласно заданию составить алгоритм и написать программу на языке С++.           */
+/* Программа компилируется и запускается под управлением ОС Linux. Разработанная               */
+/* программа должна содержать встроенную справочную информации, описывающую правила            */
+/* использования, цель назначения и информацию о разработчике. Аргументы запуска программа     */
+/* должна обрабатывать согласно рекомендациям POSIX.                                           */
 /*                                                                                             */
 /*       Исходные данные:                                                                      */
 /*         Файл неопределенной длинны                                                          */
@@ -16,11 +16,8 @@
 /*       Вызываемые модули:                                                                    */
 /*        - iostream                                                                           */
 /*        - cstdio                                                                             */
-/*        - cstring                                                                            */
-/*        - string                                                                             */
-/*        - cstdlib                                                                            */
 /*---------------------------------------------------------------------------------------------*/
-/*       Дата: 2019 | 24 | 02                                                                  */
+/*       Дата: 2019 | 25 | 02                                                                  */
 /*       Автор: Розно Константин                                                               */
 /*       ver 1.01                                                                              */
 /*       Исправления: отсутствуют                                                              */
@@ -30,69 +27,170 @@
 // Директивы препроцессора
 
 #include <iostream>
-#include <fstream>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <string>
 
 /*=============================================================================================*/
 // Подключение функций и классов стандартной библиотеки С++
 
-using std::string;
 using std::cout;
-using std::ifstream;
-using std::getline;
+using std::endl;
+using std::cin;
+using std::cerr;
 
-void logo() {
+/*=============================================================================================*/
+// Функция открытия файла с проверкой
+
+FILE* createFile(const char* str, const char* format) {
+	FILE* file = fopen(str, format);
+	if (file == nullptr) {
+		cout << "File " << str << " cannot be opened.\n";
+		exit(-1);
+	}
+	else
+		return file;
+}
+
+void logo(void) {
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** ";
 	cout << "\033[37;1m\033[40m" << "\n * Nizhniy Novgorod Technical University                   * ";
-	cout << "\033[37;1m\033[40m" << "\n * Study work number 20. Task number 1.                    * ";
+	cout << "\033[37;1m\033[40m" << "\n * Study work number 2. Task number 4.                     * ";
 	cout << "\033[37;1m\033[40m" << "\n * Performed student 18-IVT-2 Rozno Konstantin             * ";
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** \n\n";
 	return;
 }
 
-void error() {
-	cout << "Please enter text file name.\n";
+/*=============================================================================================*/
+// Функции вывода сообщений
+
+void error(void) {
+	cout << "1) \"-help\" or \"-h\" - manual" << endl;
+	cout << "2) \"-с [N] [file_name]\" - running the program in the mode of creating a spreadsheet records" << endl;
+	cout << "3) \"-r [N] [file_name]\" - run the program in the mode of reading the contents of a text file" << endl;
+	cout << "4) \"-i\" or \"-info\" - displays information about the author" << endl;
 	return;
 }
 
-void help() {
-	cout << "This program takes as input the name\nof an existing text file and displays its contents.\n";
+void help(void) {
+	cout << "1) \"-с [N] [file_name]\" - running the program in the mode of creating a spreadsheet records" << endl;
+	cout << "2) \"-r [N] [file_name]\" - run the program in the mode of reading the contents of a text file" << endl;
+	cout << "3) \"-i\" or \"-info\" - displays information about the author" << endl;
+	cout << "All records are stored in one line separated by spaces" << endl;
+	cout << "Records are stored in this order:" << endl;
+	cout << "1. The name of the cinema" << endl;
+	cout << "2. Title picture" << endl;
+	cout << "3. Session times" << endl;
+	cout << "4. Ticket price" << endl;
+	cout << "5. Address" << endl;
 	return;
 }
+
+void info(void) {
+	logo();
+	return;
+}
+
+/*=============================================================================================*/
+// Реализуем функцию похожую на "int strlen(const char* str) {...}"
+
+int myLen(const char* str) {
+	int res = 0;
+	for (res; str[res] != '\0'; res++);
+	return res;
+}
+
+/*=============================================================================================*/
+// Реализуем функцию похожую на "int strcmp(const char* str1, const char* str2) {...}"
+
+int myCmp(const char* str1, const char* str2) {
+	int res = 0;
+	if (myLen(str1) != myLen(str2)) {
+		res = -1;
+		return res;
+	}
+	for (int i = 0; i < myLen(str1); i++) {
+		if (str1[i] != str2[i]) {
+			res = 1;
+			break;
+		}
+	}
+	return res;
+}
+
+int myAtoi(const char* str) {
+	int res = 0;
+	int i;
+	static char cmp[] = { "0123456789" };
+	for (i = 0; i < myLen(str); i++, res *= 10)
+		for (int j = 0; j < myLen(cmp); j++)
+			if (str[i] == cmp[j]) {
+				res += j;
+				break;
+			}
+	return (int)(res / 10);
+}
+
+template <typename T>
+void chek_in(T& a) {
+	while (!(cin >> a)) {
+		cerr << "Error\n";
+		cin.clear();
+		cin.ignore(132, '\n');
+	}
+	return;
+}
+
+struct cinema {
+	char name[124];
+	char movie[124];
+	unsigned short int time;
+	unsigned short int costOf;
+	unsigned short int address;
+};
 
 int main(int argc, const char* argv[]) {
+
+	system("clear");
+
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
 	// Вывод справочной информации
-	if ((!strcmp(argv[1], "-h")) || (!strcmp(argv[1], "-help"))) help(), exit(0);
+	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "-help"))) help(), exit(0);
 	// Вывод информации об авторе
-	if ((!strcmp(argv[1], "-i")) || (!strcmp(argv[1], "-info"))) logo(), exit(0);
+	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "-info"))) info(), exit(0);
 
-	ifstream file(argv[1]);
-
-	if (!file.is_open()) {
-		cout << "File " << argv[1] << " cannot be opened.\n";
-		exit(-1);
-	}
-
-	string str;
-
-	int word = 0, space = 0, simbol = 0, predl = 0, bukva = 0;
-	while (getline(file, str)) {
-		for (int i = 0; i < str.length(); i++) {
-			if (str[i] == ' ') space++, word++;
-			if (str[i] == '.') predl++;
-			if ((str[i] >= 'a'&&str[i] <= 'z') || (str[i] >= 'A'&&str[i] <= 'Z')) bukva++;
+	if (!myCmp(argv[1], "-c") && argc == 4) {
+		system("clear");
+		FILE* fileOut = createFile(argv[3], "w");
+		cinema temp;
+		for (int i = 0; i < myAtoi(argv[2]); i++) {
+			cout << "Enter num: "; cin >> temp.name;
+			cout << "Enter name: "; cin >> temp.movie;
+			cout << "Enter type: "; chek_in(temp.time);
+			cout << "Enter cost of"; chek_in(temp.costOf);
+			cout << "Enter length line, km: "; chek_in(temp.address);
+			fprintf(fileOut, "%s\t%s\t%u\t%u\t%u\n", temp.name, temp.movie, temp.time, temp.costOf, temp.address);
 		}
-		simbol += str.length();
+		fclose(fileOut);
 	}
-	cout << "1) " << simbol << "\n";
-	cout << "2) " << simbol-space << "\n";
-	cout << "3) " << bukva << "\n";
-	cout << "4) " << word << "\n";
-	cout << "5) " << predl << "\n";
+
+	if (!myCmp(argv[1], "-r") && argc == 4) {
+		system("clear");
+		FILE* fileIn = createFile(argv[3], "r");
+		cinema tempIn;
+		int count = 0;
+		while (fscanf(fileIn, "%s\t%s\t%u\t%u\t%u\n", tempIn.name, tempIn.movie, &tempIn.time, &tempIn.costOf, &tempIn.address) != EOF) {
+			if (!(count == myAtoi(argv[2]))) {
+				fprintf(stdout, "%s\t%s\t%u\t%u\t%u\n", tempIn.name, tempIn.movie, tempIn.time, tempIn.costOf, tempIn.address);
+				count++;
+			}
+			else {
+				break;
+			}
+		}
+		cout << "File is empty" << endl;
+		fclose(fileIn);
+	}
+
 	return 0;
 }
