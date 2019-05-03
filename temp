@@ -1,5 +1,5 @@
 /***********************************************************************************************/
-/*       Функция: FilePrintLine2(file):file                                                     */
+/*       Функция: FilePrintLine3(file):file                                                     */
 /*       Цель:Согласно заданию составить алгоритм и написать программу на языке С++.           */
 /* Программа компилируется и запускается под управлением ОС Linux. Разработанная               */
 /* программа должна содержать встроенную справочную информации, описывающую правила            */
@@ -15,7 +15,7 @@
 /*                                                                                             */
 /*       Вызываемые модули:                                                                    */
 /*        - iostream                                                                           */
-/*        - cstdio                                                                             */
+/*        - fstream                                                                            */
 /*---------------------------------------------------------------------------------------------*/
 /*       Дата: 2019 | 25 | 02                                                                  */
 /*       Автор: Розно Константин                                                               */
@@ -27,9 +27,8 @@
 // Директивы препроцессора
 
 #include <iostream>
-#include <cstdio>
+#include <fstream>
 #include <cstdlib>
-
 /*=============================================================================================*/
 // Подключение функций и классов стандартной библиотеки С++
 
@@ -37,19 +36,11 @@ using std::cout;
 using std::endl;
 using std::cin;
 using std::cerr;
+using std::ifstream;
+using std::ofstream;
+using std::ios;
 
-/*=============================================================================================*/
-// Функция открытия файла с проверкой
-
-FILE* createFile(const char* str, const char* format) {
-	FILE* file = fopen(str, format);
-	if (file == nullptr) {
-		cout << "File " << str << " cannot be opened.\n";
-		exit(-1);
-	}
-	else
-		return file;
-}
+// Информация о авторе
 
 void logo(void) {
 	cout << "\033[37;1m\033[40m" << "\n *********************************************************** ";
@@ -90,6 +81,8 @@ void info(void) {
 	return;
 }
 
+char newLine('\n');
+
 /*=============================================================================================*/
 // Реализуем функцию похожую на "int strlen(const char* str) {...}"
 
@@ -117,6 +110,8 @@ int myCmp(const char* str1, const char* str2) {
 	return res;
 }
 
+/*=============================================================================================*/
+
 int myAtoi(const char* str) {
 	int res = 0;
 	int i;
@@ -130,6 +125,8 @@ int myAtoi(const char* str) {
 	return (int)(res / 10);
 }
 
+/*=============================================================================================*/
+
 template <typename T>
 void chek_in(T& a) {
 	while (!(cin >> a)) {
@@ -140,57 +137,167 @@ void chek_in(T& a) {
 	return;
 }
 
-struct cinema {
+/*=============================================================================================*/
+
+class cinema {
+private:
 	char name[124];
 	char movie[124];
-	unsigned short int time;
-	unsigned short int costOf;
-	unsigned short int address;
+	int time;
+	int costOf;
+	int address;
+public:
+	cinema(void) {
+		time = 0;
+		costOf = 0;
+		address = 0;
+		return;
+	}
+	void setName(char* _name) {
+		for (int i = 0; i < myLen(_name); i++) this->name[i] = _name[i];
+		this->name[myLen(_name)] = '\0';
+		return;
+	}
+	void setMovie(char* _movie) {
+		for (int i = 0; i < myLen(_movie); i++) this->movie[i] = _movie[i];
+		this->movie[myLen(_movie)] = '\0';
+		return;
+	}
+	void setTime(int _time) {
+		time = _time;
+		return;
+	}
+	void setCostOf(int _costOf) {
+		this->costOf = _costOf;
+		return;
+	}
+	void setAddress(int _address) {
+		this->address = _address;
+		return;
+	}
+	char* getName(void) {
+		return this->name;
+	}
+	char* getMovie(void) {
+		return this->name;
+	}
+	int getTime(void) {
+		return this->time;
+	}
+	int getCostOf(void) {
+		return this->costOf;
+	}
+	int getAddress(void) {
+		return this->address;
+	}
+	void read(ifstream& file) {
+		file.read(name, 124);
+		file.read(movie, 124);
+		file.read((char*)&time, sizeof(int));
+		file.read((char*)&costOf, sizeof(int));
+		file.read((char*)&address, sizeof(int));
+		file.read(&newLine, 1);
+		return;
+	}
+	void write(ofstream& file) {
+		file.write(name, 124);
+		file.write(movie, 124);
+		file.write((char*)&time, sizeof(int));
+		file.write((char*)&costOf, sizeof(int));
+		file.write((char*)&address, sizeof(int));
+		file.write(&newLine, 1);
+		return;
+	}
 };
+
+/*=============================================================================================*/
 
 int main(int argc, const char* argv[]) {
 
 	system("clear");
 
+	/*=============================================================================================*/
+
+	char name[124];
+	char movie[124];
+	int time;
+	int costOf;
+	int address;
+
+	/*=============================================================================================*/
+
 	// Если кол-во аргументов равно 1 выводим сообщение об ошибке
 	if (argc == 1) error(), exit(-1);
 	// Вывод справочной информации
-	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "-help"))) help(), exit(0);
+	if ((!myCmp(argv[1], "-h")) || (!myCmp(argv[1], "--help"))) help(), exit(0);
 	// Вывод информации об авторе
-	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "-info"))) info(), exit(0);
+	if ((!myCmp(argv[1], "-i")) || (!myCmp(argv[1], "--info"))) info(), exit(0);
+
+	/*=============================================================================================*/
 
 	if (!myCmp(argv[1], "-c") && argc == 4) {
 		system("clear");
-		FILE* fileOut = createFile(argv[3], "w");
-		cinema temp;
+		int count = myAtoi(argv[2]);
+		ofstream fileOut(argv[3], ios::binary);
+		cinema* bufout = new cinema[count];
+		fileOut.write((char*)&count, sizeof(int));
+		fileOut.write(&newLine, 1);
 		for (int i = 0; i < myAtoi(argv[2]); i++) {
-			cout << "Enter num: "; cin >> temp.name;
-			cout << "Enter name: "; cin >> temp.movie;
-			cout << "Enter type: "; chek_in(temp.time);
-			cout << "Enter cost of"; chek_in(temp.costOf);
-			cout << "Enter length line, km: "; chek_in(temp.address);
-			fprintf(fileOut, "%s\t%s\t%u\t%u\t%u\n", temp.name, temp.movie, temp.time, temp.costOf, temp.address);
+			cout << "Enter name: "; cin >> name;
+			cout << "Enter movie: "; cin >> movie;
+			cout << "Enter time: "; chek_in(time);
+			cout << "Enter cost of: "; chek_in(costOf);
+			cout << "Enter address: "; chek_in(address);
+			bufout[i].setName(name);
+			bufout[i].setMovie(movie);
+			bufout[i].setTime(time);
+			bufout[i].setCostOf(costOf);
+			bufout[i].setAddress(address);
+			bufout[i].write(fileOut);
+			system("clear");
 		}
-		fclose(fileOut);
+		fileOut.close();
+		delete[] bufout;
+		bufout = nullptr;
 	}
+
+	/*=============================================================================================*/
 
 	if (!myCmp(argv[1], "-r") && argc == 4) {
 		system("clear");
-		FILE* fileIn = createFile(argv[3], "r");
-		cinema tempIn;
-		int count = 0;
-		while (fscanf(fileIn, "%s\t%s\t%u\t%u\t%u\n", tempIn.name, tempIn.movie, &tempIn.time, &tempIn.costOf, &tempIn.address) != EOF) {
-			if (!(count == myAtoi(argv[2]))) {
-				fprintf(stdout, "%s\t%s\t%u\t%u\t%u\n", tempIn.name, tempIn.movie, tempIn.time, tempIn.costOf, tempIn.address);
-				count++;
-			}
-			else {
-				break;
-			}
+		ifstream fileIn(argv[3], ios::binary);
+		if (!fileIn.is_open()) {
+			cout << "Error\n";
+			exit(-1);
+		}
+		cinema* bufin = new cinema[myAtoi(argv[2])];
+		int counter = 0;
+		int countStolb;
+		fileIn.read((char*)&countStolb, sizeof(int));
+		fileIn.read(&newLine, 1);
+		while (!fileIn.eof() && counter < myAtoi(argv[2])) {
+			bufin[counter].read(fileIn);
+			if (fileIn.eof()) break;
+			cout << bufin[counter].getName()
+				<< "\t"
+				<< bufin[counter].getMovie()
+				<< "\t"
+				<< bufin[counter].getTime()
+				<< "\t"
+				<< bufin[counter].getCostOf()
+				<< "\t"
+				<< bufin[counter].getAddress()
+				<< "\t\n";
+			counter++;
 		}
 		cout << "File is empty" << endl;
-		fclose(fileIn);
+		cout << "Number of records = " << countStolb << endl;
+		fileIn.close();
+		delete[] bufin;
+		bufin = nullptr;
 	}
+
+	/*=============================================================================================*/
 
 	return 0;
 }
